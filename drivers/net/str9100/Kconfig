@@ -1,0 +1,45 @@
+menu "CNS1100 Gigabit Switch support"
+	depends on ARCH_STR9100
+
+config STAR_GSW
+	tristate "CNS1100 Gigabit Switch driver support"
+
+config STR9100_SHNAT
+	bool "CNS1100 Smart HNAT Support"
+	depends on STAR_GSW
+	help
+	  Add STAR Smart HNAT support function in kernel
+
+config STAR9100_SHNAT_PCI_FASTPATH
+	bool "FastPath(From PCI to WAN) Support"
+	depends on STR9100_SHNAT
+	help
+	  Add FastPath Support for Smart HNAT.
+
+choice
+	prompt "CNS1100 Board"
+	depends on STAR_GSW
+	default DORADO
+
+config DORADO
+	bool "Dorado"
+
+config DORADO2
+	bool "Dorado2"
+
+config VIRGO
+	bool "Virgo"
+
+config VELA
+	bool "Vela"
+
+config LIBRA
+	bool "Libra"
+
+config LEO
+	bool "Leo"
+
+endchoice
+
+endmenu
+

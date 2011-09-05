@@ -1,0 +1,25 @@
+--- kernels/linux-2.6.24-cavium/drivers/usb/gadget/str8100_udc.c	2010-04-16 11:18:36.000000000 +0800
++++ kernels/linux-2.6.24-current/drivers/usb/gadget/str8100_udc.c	2010-04-16 11:26:47.000000000 +0800
+@@ -1828,12 +1828,11 @@
+ 	if (!driver || driver != dev->driver)
+ 		return -EINVAL;
+ 	spin_lock_irqsave(&dev->lock, flags);
+-	dev->driver = 0;
+ 
+ 	//john stop_activity(dev, driver);
+ 	spin_unlock_irqrestore(&dev->lock, flags);
+ 	driver->unbind(&dev->gadget);
+-
++	dev->driver = NULL;
+ 	mUsbUnPLGSet();
+ 	while (i++ < 100)	udelay(1000);
+ 
+@@ -1894,7 +1893,7 @@
+ 	mUsbIntSuspClr();
+ 
+ 	//Bruce;;mUsbGoSuspend();
+-	dev->ep0state = EP0_SUSPEND;
++	//dev->ep0state = EP0_SUSPEND;
+ }
+ 
+ ///////////////////////////////////////////////////////////////////////////////

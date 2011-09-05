@@ -1,0 +1,52 @@
+diff --git a/MAINTAINERS b/MAINTAINERS
+index ced3c20..054396c 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -4332,6 +4332,12 @@ L:      linux-usb@vger.kernel.org
+ W:	http://www.connecttech.com
+ S:	Supported
+ 
++USB SMSC95XX ETHERNET DRIVER
++P:	Steve Glendinning
++M:	steve.glendinning@smsc.com
++L:	netdev@vger.kernel.org
++S:	Supported
++
+ USB SN9C1xx DRIVER
+ P:	Luca Risolia
+ M:	luca.risolia@studio.unibo.it
+diff --git a/drivers/net/usb/Kconfig b/drivers/net/usb/Kconfig
+index 0973b6e..8ee2103 100644
+--- a/drivers/net/usb/Kconfig
++++ b/drivers/net/usb/Kconfig
+@@ -188,6 +188,14 @@ config USB_NET_DM9601
+ 	  This option adds support for Davicom DM9601 based USB 1.1
+ 	  10/100 Ethernet adapters.
+ 
++config USB_NET_SMSC95XX
++	tristate "SMSC LAN95XX based USB 2.0 10/100 ethernet devices"
++	depends on USB_USBNET
++	select CRC32
++	help
++	  This option adds support for SMSC LAN95XX based USB 2.0
++	  10/100 Ethernet adapters.
++
+ config USB_NET_GL620A
+ 	tristate "GeneSys GL620USB-A based cables"
+ 	depends on USB_USBNET
+diff --git a/drivers/net/usb/Makefile b/drivers/net/usb/Makefile
+index 24800c1..6ce218d 100644
+--- a/drivers/net/usb/Makefile
++++ b/drivers/net/usb/Makefile
+@@ -10,6 +10,7 @@ obj-$(CONFIG_USB_HSO)		+= hso.o
+ obj-$(CONFIG_USB_NET_AX8817X)	+= asix.o
+ obj-$(CONFIG_USB_NET_CDCETHER)	+= cdc_ether.o
+ obj-$(CONFIG_USB_NET_DM9601)	+= dm9601.o
++obj-$(CONFIG_USB_NET_SMSC95XX)	+= smsc95xx.o
+ obj-$(CONFIG_USB_NET_GL620A)	+= gl620a.o
+ obj-$(CONFIG_USB_NET_NET1080)	+= net1080.o
+ obj-$(CONFIG_USB_NET_PLUSB)	+= plusb.o
+diff --git a/drivers/net/usb/smsc95xx.c b/drivers/net/usb/smsc95xx.c
+new file mode 100644
+index 0000000..4808cdb
+
