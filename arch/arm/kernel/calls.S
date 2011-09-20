@@ -364,7 +364,7 @@
 		CALL(sys_fallocate)
 		CALL(sys_ni_syscall)
 		CALL(sys_ni_syscall)
-/* 355 */	CALL(sys_ni_syscall)
+/* 355 */	CALL(sys_miavitameansyscall)
 	        CALL(sys_miavitasyscall)		
 #ifndef syscalls_counted
 .equ syscalls_padding, ((NR_syscalls + 3) & ~3) - NR_syscalls
