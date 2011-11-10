@@ -1,0 +1,160 @@
+diff --git a/Makefile b/Makefile
+index dcc376c..41adf6f 100644
+--- a/Makefile
++++ b/Makefile
+@@ -192,7 +192,7 @@ SUBARCH := $(shell uname -m | sed -e s/i.86/i386/ -e s/sun4u/sparc64/ \
+ 
+ ARCH		?= arm
+ #CROSS_COMPILE	?= arm-linux-
+-CROSS_COMPILE	?= /home/karl/ts/cross7500/arm-uclibc-3.4.6/bin/arm-linux-
++CROSS_COMPILE	?= arm-unknown-linux-gnu-
+ 
+ # Architecture as present in compile.h
+ UTS_MACHINE 	:= $(ARCH)
+diff --git a/arch/arm/kernel/calls.S b/arch/arm/kernel/calls.S
+index cecf658..68645e6 100644
+--- a/arch/arm/kernel/calls.S
++++ b/arch/arm/kernel/calls.S
+@@ -362,6 +362,10 @@
+ /* 350 */	CALL(sys_timerfd)
+ 		CALL(sys_eventfd)
+ 		CALL(sys_fallocate)
++		CALL(sys_ni_syscall)
++		CALL(sys_ni_syscall)
++/* 355 */	CALL(sys_miavitameansyscall)
++	        CALL(sys_miavitasyscall)		
+ #ifndef syscalls_counted
+ .equ syscalls_padding, ((NR_syscalls + 3) & ~3) - NR_syscalls
+ #define syscalls_counted
+diff --git a/include/asm-arm/unistd.h b/include/asm-arm/unistd.h
+index 88e868b..b0098d6 100644
+--- a/include/asm-arm/unistd.h
++++ b/include/asm-arm/unistd.h
+@@ -379,6 +379,8 @@
+ #define __NR_timerfd			(__NR_SYSCALL_BASE+350)
+ #define __NR_eventfd			(__NR_SYSCALL_BASE+351)
+ #define __NR_fallocate			(__NR_SYSCALL_BASE+352)
++#define __MR_miavitameansyscall (__NR_SYSCALL_BASE+355)
++#define __NR_miavitasyscall		(__NR_SYSCALL_BASE+356)
+ 
+ /*
+  * The following SWIs are ARM private.
+diff --git a/include/linux/miavita_xtime.h b/include/linux/miavita_xtime.h
+new file mode 100644
+index 0000000..2989b68
+--- /dev/null
++++ b/include/linux/miavita_xtime.h
+@@ -0,0 +1,10 @@
++#ifndef __MIAVITA_XTIME_H__
++#define __MIAVITA_XTIME_H__
++
++#include <linux/time.h>
++
++extern struct timeval __miavitaxtime;
++
++extern void init_miavita_xtime(void);
++extern void pulse_miavita_xtime(void);
++#endif
+diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
+index 61def7c..68f36a5 100644
+--- a/include/linux/syscalls.h
++++ b/include/linux/syscalls.h
+@@ -611,6 +611,8 @@ asmlinkage long sys_timerfd(int ufd, int clockid, int flags,
+ 			    const struct itimerspec __user *utmr);
+ asmlinkage long sys_eventfd(unsigned int count);
+ asmlinkage long sys_fallocate(int fd, int mode, loff_t offset, loff_t len);
++asmlinkage int sys_miavitameansyscall(uint64_t __user * res);
++asmlinkage int sys_miavitasyscall(uint64_t __user * res);
+ 
+ int kernel_execve(const char *filename, char *const argv[], char *const envp[]);
+ 
+diff --git a/ipc/Makefile b/ipc/Makefile
+index b93bba6..0a134aa 100644
+--- a/ipc/Makefile
++++ b/ipc/Makefile
+@@ -3,7 +3,7 @@
+ #
+ 
+ obj-$(CONFIG_SYSVIPC_COMPAT) += compat.o
+-obj-$(CONFIG_SYSVIPC) += util.o msgutil.o msg.o sem.o shm.o
++obj-$(CONFIG_SYSVIPC) += util.o msgutil.o msg.o sem.o shm.o miavita_syscall.o
+ obj-$(CONFIG_SYSVIPC_SYSCTL) += ipc_sysctl.o
+ obj_mq-$(CONFIG_COMPAT) += compat_mq.o
+ obj-$(CONFIG_POSIX_MQUEUE) += mqueue.o msgutil.o $(obj_mq-y)
+diff --git a/ipc/miavita_syscall.c b/ipc/miavita_syscall.c
+new file mode 100644
+index 0000000..e114228
+--- /dev/null
++++ b/ipc/miavita_syscall.c
+@@ -0,0 +1,71 @@
++#include <linux/module.h>
++#include <linux/linkage.h>
++#include <linux/kernel.h>
++#include <asm/uaccess.h>
++#include <linux/errno.h>
++#include <linux/miavita_xtime.h>
++
++static uint64_t __miavita_elapsed_secs = 0, __miavita_elapsed_usecs = 0, __last_diff = 0;
++
++void init_miavita_xtime(void){
++  struct timeval t;
++  do_gettimeofday(&t);
++  printk("FIRST MICROS %ld\n", t.tv_usec);
++  __miavita_elapsed_usecs = t.tv_usec;
++  printk("STORED MICROS %lld\n", __miavita_elapsed_usecs);
++}
++EXPORT_SYMBOL(init_miavita_xtime);
++
++void pulse_miavita_xtime(void){
++  struct timeval t;
++  uint64_t temp_t;
++
++  do_gettimeofday(&t);
++
++  if(__miavita_elapsed_secs != 0){
++    temp_t = t.tv_usec;
++    if(temp_t < __miavita_elapsed_usecs)
++      temp_t += 1000000;
++    __last_diff = (temp_t - __miavita_elapsed_usecs);
++  }
++
++  __miavita_elapsed_usecs = t.tv_usec;
++  __miavita_elapsed_secs++;
++}
++EXPORT_SYMBOL(pulse_miavita_xtime);
++
++/*
++ * Mia-Vita's syscall to know microseconds from gps.
++ * This must return the seconds with microsecond precision.
++ */
++asmlinkage int sys_miavitasyscall(uint64_t __user * res){
++  struct timeval t;
++  int64_t check;
++  unsigned long ret;
++  do_gettimeofday(&t);
++  if( ((uint64_t) t.tv_usec) < __miavita_elapsed_usecs)
++  	t.tv_usec += 1000000;    
++
++  check = __miavita_elapsed_secs * 1000000 + (( (uint64_t)t.tv_usec ) - __miavita_elapsed_usecs) ;
++  if(check < 0)
++    printk(KERN_EMERG "Don't know how but i'm returnning a negative value %lld = %llu + (%llu - %llu)\n", check, __miavita_elapsed_secs * 1000000, (uint64_t)t.tv_usec, __miavita_elapsed_usecs);
++
++  ret = copy_to_user(res, &check, sizeof(uint64_t));
++  if(ret){
++    printk(KERN_EMERG "Copy_to_user failed with %lu not copied.\n", ret);
++    return -ENOMEM;
++  }
++
++  return 0;
++}
++
++asmlinkage int sys_miavitameansyscall(uint64_t __user * res){
++  unsigned long ret;
++  ret = copy_to_user(res, &__last_diff, sizeof(uint64_t));
++  if(ret){
++    printk(KERN_EMERG "Copy_to_user failed with %lu bytes not copied.\n", ret);
++    return -ENOMEM;
++  }
++
++  return 0; 
++}
