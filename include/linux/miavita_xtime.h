@@ -3,7 +3,7 @@
 
 #include <linux/time.h>
 
-extern struct timeval __miavitaxtime;
+extern uint64_t __miavita_elapsed_secs, __miavita_elapsed_usecs;
 
 extern void init_miavita_xtime(void);
 extern void pulse_miavita_xtime(void);

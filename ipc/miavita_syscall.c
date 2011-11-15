@@ -5,7 +5,9 @@
 #include <linux/errno.h>
 #include <linux/miavita_xtime.h>
 
-static uint64_t __miavita_elapsed_secs = 0, __miavita_elapsed_usecs = 0, __last_diff = 0;
+uint64_t __miavita_elapsed_secs = 0, __miavita_elapsed_usecs = 0, __last_diff = 0;
+EXPORT_SYMBOL(__miavita_elapsed_secs);
+EXPORT_SYMBOL(__miavita_elapsed_usecs);
 
 void init_miavita_xtime(void){
   struct timeval t;
