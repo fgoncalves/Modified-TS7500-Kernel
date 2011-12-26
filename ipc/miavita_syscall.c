@@ -71,3 +71,8 @@ asmlinkage int sys_miavitameansyscall(uint64_t __user * res){
 
   return 0; 
 }
+
+asmlinkage int sys_miavitasetseconds(uint64_t secs){
+  __miavita_elapsed_secs = secs;
+  return 0;
+}

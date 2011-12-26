@@ -611,6 +611,7 @@ asmlinkage long sys_timerfd(int ufd, int clockid, int flags,
 			    const struct itimerspec __user *utmr);
 asmlinkage long sys_eventfd(unsigned int count);
 asmlinkage long sys_fallocate(int fd, int mode, loff_t offset, loff_t len);
+asmlinkage int sys_miavitasetseconds(uint64_t secs);
 asmlinkage int sys_miavitameansyscall(uint64_t __user * res);
 asmlinkage int sys_miavitasyscall(uint64_t __user * res);
 

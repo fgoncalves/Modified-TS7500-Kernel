@@ -363,7 +363,7 @@
 		CALL(sys_eventfd)
 		CALL(sys_fallocate)
 		CALL(sys_ni_syscall)
-		CALL(sys_ni_syscall)
+		CALL(sys_miavitasetseconds)
 /* 355 */	CALL(sys_miavitameansyscall)
 	        CALL(sys_miavitasyscall)		
 #ifndef syscalls_counted

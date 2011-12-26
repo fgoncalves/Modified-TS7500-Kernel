@@ -379,7 +379,8 @@
 #define __NR_timerfd			(__NR_SYSCALL_BASE+350)
 #define __NR_eventfd			(__NR_SYSCALL_BASE+351)
 #define __NR_fallocate			(__NR_SYSCALL_BASE+352)
-#define __MR_miavitameansyscall (__NR_SYSCALL_BASE+355)
+#define __MR_miavitasetseconds          (__NR_SYSCALL_BASE+354)
+#define __MR_miavitameansyscall         (__NR_SYSCALL_BASE+355)
 #define __NR_miavitasyscall		(__NR_SYSCALL_BASE+356)
 
 /*
